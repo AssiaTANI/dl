@@ -1,21 +1,43 @@
-name: cpc37
+# name: cpc37
+# channels:
+#   - pytorch
+#   - anaconda
+#   - conda-forge
+#   - defaults
+# dependencies:
+#   - pytorch
+#   - torchvision
+#   - cudatoolkit=9.2
+#   - psutil
+#   - pip
+#   - openblas-devel
+#   - tqdm
+#   - nose
+#   - cython
+#   - pysoundfile
+#   - pip:
+#     - progressbar2
+#     - matplotlib
+#     - torchaudio
+
+
+name: cpc_audio
 channels:
   - pytorch
-  - anaconda
   - conda-forge
   - defaults
 dependencies:
-  - pytorch
+  - python=3.8
+  - pytorch>=1.10
   - torchvision
-  - cudatoolkit=9.2
-  - psutil
+  - torchaudio
+  - cudatoolkit=11.3  # ou 11.8, ou retirez cette ligne pour CPU
+  - numpy
+  - scipy
   - pip
-  - openblas-devel
-  - tqdm
-  - nose
-  - cython
-  - pysoundfile
   - pip:
     - progressbar2
-    - matplotlib
-    - torchaudio
+    - tqdm
+    - librosa
+    - soundfile
+    - tensorboardX

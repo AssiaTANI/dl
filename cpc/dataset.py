@@ -408,10 +408,22 @@ class SameSpeakerSampler(Sampler):
         return iter(self.batches)
 
 
-def extractLength(couple):
-    speaker, locPath = couple
-    info = torchaudio.info(str(locPath))[0]
-    return info.length
+# def extractLength(couple):
+#     speaker, locPath = couple
+#    # info = torchaudio.info(str(locPath))[0]
+#     meta = torchaudio.info(str(locPath))
+#     info = (meta, None)
+#     return info.length
+
+def extractLength(locPath):
+    # FIX enumerated paths
+    if isinstance(locPath, tuple):
+        locPath = locPath[1]
+
+    info = torchaudio.info(str(locPath))
+    return info.num_frames
+
+
 
 
 def findAllSeqs(dirName,
@@ -502,19 +514,37 @@ def parseSeqLabels(pathLabels):
     return output, maxPhone + 1
 
 
+# def filterSeqs(pathTxt, seqCouples):
+#     with open(pathTxt, 'r') as f:
+#         inSeqs = [p.replace('\n', '') for p in f.readlines()]
+
+#     inSeqs.sort()
+#     seqCouples.sort(key=lambda x: os.path.basename(os.path.splitext(x[1])[0]))
+#     output, index = [], 0
+#     for x in seqCouples:
+#         seq = os.path.basename(os.path.splitext(x[1])[0])
+#         while index < len(inSeqs) and seq > inSeqs[index]:
+#             index += 1
+#         if index == len(inSeqs):
+#             break
+#         if seq == inSeqs[index]:
+#             output.append(x)
+#     return output
+
 def filterSeqs(pathTxt, seqCouples):
     with open(pathTxt, 'r') as f:
-        inSeqs = [p.replace('\n', '') for p in f.readlines()]
+        inSeqs = [p.replace('\n', '').strip() for p in f.readlines()]
 
-    inSeqs.sort()
-    seqCouples.sort(key=lambda x: os.path.basename(os.path.splitext(x[1])[0]))
-    output, index = [], 0
-    for x in seqCouples:
-        seq = os.path.basename(os.path.splitext(x[1])[0])
-        while index < len(inSeqs) and seq > inSeqs[index]:
-            index += 1
-        if index == len(inSeqs):
-            break
-        if seq == inSeqs[index]:
-            output.append(x)
+    # Normalize paths for comparison (convert to consistent format)
+    inSeqs_normalized = [os.path.normpath(p) for p in inSeqs]
+    
+    output = []
+    for speaker, seqPath in seqCouples:
+        # Normalize the seqPath from seqCouples
+        normalized_seq = os.path.normpath(seqPath)
+        
+        # Check if this sequence is in our training list
+        if normalized_seq in inSeqs_normalized:
+            output.append((speaker, seqPath))
+    
     return output

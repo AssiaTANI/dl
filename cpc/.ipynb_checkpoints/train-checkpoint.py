@@ -78,14 +78,8 @@ def trainStep(dataLoader,
     for step, fulldata in enumerate(dataLoader):
         batchData, label = fulldata
         n_examples += batchData.size(0)
-        #batchData = batchData.cuda(non_blocking=True)
-        if torch.cuda.is_available():
-            batchData = batchData.cuda()
-
-        #label = label.cuda(non_blocking=True)
-        if torch.cuda.is_available():
-         label = label.cuda(non_blocking=True)
-         # Otherwise, it will stay on CPU
+        batchData = batchData.cuda(non_blocking=True)
+        label = label.cuda(non_blocking=True)
         c_feature, encoded_data, label = cpcModel(batchData, label)
         allLosses, allAcc = cpcCriterion(c_feature, encoded_data, label)
         totLoss = allLosses.sum()
@@ -140,10 +134,8 @@ def valStep(dataLoader,
 
         batchData, label = fulldata
 
-        #batchData = batchData.cuda(non_blocking=True)
-        if torch.cuda.is_available():
-            batchData = batchData.cuda()
-            label = label.cuda(non_blocking=True)
+        batchData = batchData.cuda(non_blocking=True)
+        label = label.cuda(non_blocking=True)
 
         with torch.no_grad():
             c_feature, encoded_data, label = cpcModel(batchData, label)
@@ -318,9 +310,7 @@ def main(args):
 
         cpcModel = model.CPCModel(encoderNet, arNet)
 
-    #batchSize = args.nGPU * args.batchSizeGPU
-    batchSize = args.batchSizeGPU if args.nGPU == 0 else args.batchSizeGPU * args.nGPU
-
+    batchSize = args.nGPU * args.batchSizeGPU
     cpcModel.supervised = args.supervised
 
     # Training criterion
@@ -335,14 +325,8 @@ def main(args):
         state_dict = torch.load(args.load[0], 'cpu')
         cpcCriterion.load_state_dict(state_dict["cpcCriterion"])
 
-    #cpcCriterion.cuda()
-    #cpcModel.cuda()
-    if torch.cuda.is_available() and args.nGPU > 0:
-        cpcModel = cpcModel.cuda()
-        cpcCriterion = cpcCriterion.cuda()
-    else:
-        print("Running on CPU.")
-
+    cpcCriterion.cuda()
+    cpcModel.cuda()
 
     # Optimizer
     g_params = list(cpcCriterion.parameters()) + list(cpcModel.parameters())
@@ -384,14 +368,11 @@ def main(args):
     if scheduler is not None:
         for i in range(len(logs["epoch"])):
             scheduler.step()
-    
-    if torch.cuda.is_available() and args.nGPU > 1:
-        cpcModel = torch.nn.DataParallel(cpcModel,
+
+    cpcModel = torch.nn.DataParallel(cpcModel,
                                      device_ids=range(args.nGPU)).cuda()
-        cpcCriterion = torch.nn.DataParallel(cpcCriterion,
+    cpcCriterion = torch.nn.DataParallel(cpcCriterion,
                                          device_ids=range(args.nGPU)).cuda()
-    else:
-        print("Running on single CPU — DataParallel disabled.")
 
     run(trainDataset,
         valDataset,
@@ -509,8 +490,8 @@ def parseArgs(argv):
 
 if __name__ == "__main__":
     torch.multiprocessing.set_start_method('spawn')
-    args = sys.argv[1:]
+    #args = sys.argv[1:]
  
-    # args = " --pathDB C:/Users/User/Desktop/dl/IRMAS_CPC_format --pathTrain C:/Users/User/Desktop/dl/CPC_audio/train_sequences.txt --pathVal C:/Users/User/Desktop/dl/CPC_audio/val_sequences.txt --file_extension .wav --normMode batchNorm --rnnMode linear"
+    args = " --pathDB C:/Users/User/Desktop/dl/IRMAS_CPC_format --pathTrain C:/Users/User/Desktop/dl/CPC_audio/train_sequences.txt --pathVal C:/Users/User/Desktop/dl/CPC_audio/val_sequences.txt --file_extension .wav --normMode batchNorm --rnnMode linear"
 
     main(args)
