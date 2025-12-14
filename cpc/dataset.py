@@ -13,8 +13,8 @@ from copy import deepcopy
 from torch.multiprocessing import Pool
 from torch.utils.data import Dataset, DataLoader
 from torch.utils.data.sampler import Sampler, BatchSampler
+
 import torchaudio
-from torchaudio.backend import sox_io_backend
 
 
 class AudioBatchData(Dataset):
@@ -415,15 +415,12 @@ class SameSpeakerSampler(Sampler):
 #     info = (meta, None)
 #     return info.length
 
-
-
 def extractLength(locPath):
     # FIX enumerated paths
     if isinstance(locPath, tuple):
         locPath = locPath[1]
 
-    #info = torchaudio.info(str(locPath))
-    info = sox_io_backend.info(str(locPath))
+    info = torchaudio.info(str(locPath))
     return info.num_frames
 
 
