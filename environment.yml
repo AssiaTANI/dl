@@ -31,7 +31,7 @@ dependencies:
   - pytorch>=1.10
   - torchvision
   - torchaudio
-  #cudatoolkit=11.3  # ou 11.8, ou retirez cette ligne pour CPU
+  - cudatoolkit=11.3  # ou 11.8, ou retirez cette ligne pour CPU
   - numpy
   - scipy
   - pip
